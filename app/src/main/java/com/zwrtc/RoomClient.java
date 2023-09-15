@@ -6,19 +6,8 @@ import static com.zwrtc.Constant.VIDEO_FPS;
 import static com.zwrtc.Constant.VIDEO_HEIGHT;
 import static com.zwrtc.Constant.VIDEO_RATE;
 import static com.zwrtc.Constant.VIDEO_WIDTH;
-import static com.zwrtc.utils.Utils.bitmapToI420;
-import static com.zwrtc.utils.Utils.convertI420BufferToByteArray;
-import static com.zwrtc.utils.Utils.convertNV21BufferToVideoFrame;
-import static com.zwrtc.utils.Utils.convertYUVToVideoFrame;
-import static com.zwrtc.utils.Utils.flattenByteArray;
-import static com.zwrtc.utils.Utils.getUData;
-import static com.zwrtc.utils.Utils.getVData;
-import static com.zwrtc.utils.Utils.getYData;
-import static com.zwrtc.utils.Utils.i420ToBitmap;
-import static com.zwrtc.utils.Utils.saveBitmap;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -34,12 +23,10 @@ import com.zwrtc.jni.type.RoomState;
 
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoTrack;
-import org.webrtc.YuvHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -232,10 +219,6 @@ public class RoomClient {
                 Log.i("onVideoFrame", "onVideoFrame remote user into");
                 mRoomStore.remoteVideoTrack.postValue(video_frame);
             }
-
         }
-
-
-
     };
 }

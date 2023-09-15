@@ -1,6 +1,5 @@
 package com.zwrtc.jni;
 
-import com.zwrtc.jni.cb.ErrorCallback;
 import com.zwrtc.jni.track.Track;
 import com.zwrtc.jni.type.CreateFusionRoomConfig;
 import com.zwrtc.jni.type.FusionUserConfig;
@@ -119,7 +118,7 @@ public class RTCClient {
      *
      * \param error_cb 错误回调
      */
-    public native void publishMicrophone(ErrorCallback errorCallback);
+//    public native void publishMicrophone(ErrorCallback errorCallback);
 
     /**
      * \brief 取消发布麦克风音频流
