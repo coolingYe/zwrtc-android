@@ -28,4 +28,6 @@ public interface IRtcEventHolder {
     void onRemoteTrackRemove(Track track);
 
     void onVideoFrame(String user_id, String track_id, VideoFrame video_frame);
+
+    void onVideoFrame(String user_id, String track_id, org.webrtc.VideoFrame video_frame);
 }

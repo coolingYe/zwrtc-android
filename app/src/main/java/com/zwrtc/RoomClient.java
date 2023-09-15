@@ -1,25 +1,25 @@
 package com.zwrtc;
 
-import static com.zwrtc.Constant.ROOM_ID;
-import static com.zwrtc.Constant.SERVICE_URL;
-import static com.zwrtc.Constant.VIDEO_FPS;
-import static com.zwrtc.Constant.VIDEO_HEIGHT;
-import static com.zwrtc.Constant.VIDEO_RATE;
-import static com.zwrtc.Constant.VIDEO_WIDTH;
+import static com.zwrtc.jni.Constants.ROOM_ID;
+import static com.zwrtc.jni.Constants.SERVICE_URL;
+import static com.zwrtc.jni.Constants.VIDEO_FPS;
+import static com.zwrtc.jni.Constants.VIDEO_HEIGHT;
+import static com.zwrtc.jni.Constants.VIDEO_RATE;
+import static com.zwrtc.jni.Constants.VIDEO_WIDTH;
 
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import com.zwrtc.jni.Constants;
 import com.zwrtc.jni.IRtcEngineEventHandler;
 import com.zwrtc.jni.RTCClient;
-import com.zwrtc.jni.ZWRTC;
 import com.zwrtc.jni.track.Track;
 import com.zwrtc.jni.type.ConnectionClosedInfo;
-import com.zwrtc.jni.type.JoinConfig;
-import com.zwrtc.jni.type.Property;
+import com.zwrtc.jni.type.RTCClientConfig;
 import com.zwrtc.jni.type.RoomState;
+import com.zwrtc.jni.utils.PeerConnectionUtils;
 
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoTrack;
@@ -27,8 +27,7 @@ import org.webrtc.VideoTrack;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class RoomClient {
     private static final String TAG = "RoomClient";
@@ -40,13 +39,9 @@ public class RoomClient {
     private PeerConnectionUtils mPeerConnectionUtils;
 
     private RTCClient mRtcClient;
-    private ZWRTC mZWRTC = new ZWRTC();
-    private List<RTCClient> mClientList = new ArrayList<>();
-    private JoinConfig config;
+    private RTCClientConfig config;
 
     private VideoTrack mVideoTrack;
-
-    private int fileCount;
 
     public RoomClient(Context context, RoomStore mRoomStore) {
         this.context = context;
@@ -60,19 +55,16 @@ public class RoomClient {
 
 
     public void initRTC() {
-        mZWRTC.initialize();
         Log.i(TAG, "initialize after");
 
-        mRtcClient = new RTCClient();
-        mRtcClient.createNativeObject(eventHandler);
-        config = mZWRTC.makeJoinConfig(ROOM_ID, SERVICE_URL);
-        Property property = new Property();
-        property.protocol = Property.Protocol.kZWAI;
-        property.groupPhoto = false;
-        property.caFile = "NONE";
-        mRtcClient.setProperties(property);
-        mRtcClient.join(config);
-        mClientList.add(mRtcClient);
+        config = new RTCClientConfig();
+        config.mRoomId = ROOM_ID;
+        config.mServerUrl = SERVICE_URL;
+        config.mChannelProfile = Constants.CHANNEL_PROFILE_LIVE_COMMUNICATION;
+        config.mRtcEngineEventHandler = eventHandler;
+
+        mRtcClient = RTCClient.create(config);
+        mRtcClient.joinChannel(config);
     }
 
 
@@ -134,9 +126,7 @@ public class RoomClient {
     }
 
     public void pushVideoFrame(VideoFrame videoFrame) {
-        //saveYuvDataFile(videoFrame);
 
-        //mRtcClient.pushVideoFrame(width, height, yData, buffer.getStrideY(), uData, buffer.getStrideU(), vData, buffer.getStrideV(), timeStampUs);
     }
 
     private void enableCamera() {
@@ -155,7 +145,7 @@ public class RoomClient {
             Log.i("onRoomStateChanged", "onRoomStateChanged callback succeed MainActivity");
             Log.i("onRoomStateChanged", "onRoomStateChanged state = " + state);
             if (state == RoomState.CONNECTED) {
-                mRtcClient.publishCustomVideo(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS, VIDEO_RATE);
+                mRtcClient.initPublishVideo(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS, VIDEO_RATE);
             }
         }
 
@@ -176,7 +166,7 @@ public class RoomClient {
             Log.i("onLocalTrackCreate", "onLocalTrackCreate callback id=" + track.isVideo);
             Log.i("onLocalTrackCreate", "onLocalTrackCreate ptr=" + track.nativeTrackPtr);
             if (track.isVideo) {
-                mRtcClient.setVideoFrameListener(track.nativeTrackPtr);
+                mRtcClient.setOnVideoFrameListener(track.nativeTrackPtr);
                 enableCamera();
             }
 
@@ -195,7 +185,7 @@ public class RoomClient {
             Log.i("onRemoteTrackCreate", "onRemoteTrackCreate ptr=" + track.nativeTrackPtr);
             if (track.isVideo) {
                 Log.i("onRemoteTrackCreate", "onRemoteTrackCreate  isVideo inro ptr=");
-                mRtcClient.setVideoFrameListener(track.nativeTrackPtr);
+                mRtcClient.setOnVideoFrameListener(track.nativeTrackPtr);
 
             }
         }
@@ -206,11 +196,17 @@ public class RoomClient {
         }
 
         @Override
+        public void onVideoFrame(String user_id, String track_id, VideoFrame video_frame) {
+            super.onVideoFrame(user_id, track_id, video_frame);
+            Log.i("onVideoFrameCallback", "onVideoFrameCallback callback succeed MainActivity" + video_frame.toString());
+        }
+
+        @Override
         public void onVideoFrame(String user_id, String track_id, com.zwrtc.jni.type.VideoFrame video_frame) {
             super.onVideoFrame(user_id, track_id, video_frame);
             Log.i("onVideoFrame", "onVideoFrame callback succeed MainActivity" + track_id);
             Log.i("onVideoFrame", "onVideoFrame userId=" + user_id);
-            if (user_id == config.getUserId()) {
+            if (Objects.equals(user_id, config.getUserId())) {
                 //当地的用户
                 Log.i("onVideoFrame", "onVideoFrame local user into");
 //              mRoomStore.remoteVideoTrack.postValue(video_frame);

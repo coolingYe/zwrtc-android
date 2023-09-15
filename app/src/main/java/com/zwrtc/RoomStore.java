@@ -1,6 +1,6 @@
 package com.zwrtc;
 
-import static com.zwrtc.Constant.ROOM_ID;
+import static com.zwrtc.jni.Constants.ROOM_ID;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;

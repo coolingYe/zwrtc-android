@@ -1,5 +1,7 @@
 package com.zwrtc.jni;
 
+import static com.zwrtc.jni.utils.YUVUtils.convertNV21BufferToVideoFrame;
+
 import com.zwrtc.jni.track.Track;
 import com.zwrtc.jni.type.ConnectionClosedInfo;
 import com.zwrtc.jni.type.Message;
@@ -52,7 +54,10 @@ public abstract class IRtcEngineEventHandler implements IRtcEventHolder {
     }
 
     public void onVideoFrame(String user_id, String track_id, VideoFrame video_frame) {
-
+        onVideoFrame(user_id, track_id, convertNV21BufferToVideoFrame(video_frame));
     }
 
+    public void onVideoFrame(String user_id, String track_id, org.webrtc.VideoFrame video_frame) {
+
+    }
 }
