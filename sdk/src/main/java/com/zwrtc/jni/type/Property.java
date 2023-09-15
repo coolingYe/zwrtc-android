@@ -1,5 +1,7 @@
 package com.zwrtc.jni.type;
 
+import androidx.annotation.NonNull;
+
 public class Property {
     public enum Protocol {
         kProtoo,

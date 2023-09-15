@@ -1,4 +1,4 @@
-package com.zwrtc;
+package com.zwrtc.jni.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
