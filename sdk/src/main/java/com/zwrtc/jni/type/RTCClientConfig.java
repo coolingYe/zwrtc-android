@@ -60,5 +60,4 @@ public class RTCClientConfig {
         return mChannelProfile;
     }
 
-    public static native RTCClientConfig makeJoinConfig(String roomId, String serverUrl);
 }

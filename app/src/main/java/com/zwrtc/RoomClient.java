@@ -19,6 +19,7 @@ import com.zwrtc.jni.track.Track;
 import com.zwrtc.jni.type.ConnectionClosedInfo;
 import com.zwrtc.jni.type.RTCClientConfig;
 import com.zwrtc.jni.type.RoomState;
+import com.zwrtc.jni.utils.CommonUtils;
 import com.zwrtc.jni.utils.PeerConnectionUtils;
 
 import org.webrtc.VideoFrame;
@@ -31,13 +32,10 @@ import java.util.Objects;
 
 public class RoomClient {
     private static final String TAG = "RoomClient";
-
     private Context context;
     private RoomStore mRoomStore;
-
     private Handler mWorkHandler;
     private PeerConnectionUtils mPeerConnectionUtils;
-
     private RTCClient mRtcClient;
     private RTCClientConfig config;
 
@@ -53,7 +51,6 @@ public class RoomClient {
         mWorkHandler.post(() -> mPeerConnectionUtils = new PeerConnectionUtils());
     }
 
-
     public void initRTC() {
         Log.i(TAG, "initialize after");
 
@@ -62,16 +59,19 @@ public class RoomClient {
         config.mServerUrl = SERVICE_URL;
         config.mChannelProfile = Constants.CHANNEL_PROFILE_LIVE_COMMUNICATION;
         config.mRtcEngineEventHandler = eventHandler;
+        config.mAppId = "pAoK7BnE";
+        config.mUserToken = "pAoK7BnE.RbdQI2VyEwbyVI8w2kIBUUjJFpXgWhhaQiPSWglvY7M=.eyJhcHBJZCI6InBBb0s3Qm5FIiwiZXhwaXJlQXQiOjE2OTU5MTY4MDAwMDAsInBlcm1pc3Npb24iOiJ1c2VyIiwicm9vbUlkIjoiMTIzNDU2Iiwic2VydmljZUNvZGUiOiJydGNfdmlkZW9fY2FsbCJ9";
+        config.mDisplayName = CommonUtils.getRandomString(8);
+        config.mUserId = CommonUtils.getRandomString(8);
 
         mRtcClient = RTCClient.create(config);
         mRtcClient.joinChannel(config);
     }
 
-
     public void saveYuvDataFile(VideoFrame videoFrame) {
         // 获取外部存储目录路径
         File externalStorageDir = this.context.getExternalCacheDir();
-        Log.d("saveYuvDataFile", "externalStorageDir=" + externalStorageDir);
+        Log.d(TAG, "saveYuvDataFile externalStorageDir=" + externalStorageDir);
 
         // YUV文件路径
         String fileName = "test";
@@ -93,11 +93,6 @@ public class RoomClient {
             int uSize = ySize / 4;
             int vSize = ySize / 4;
 
-
-//            ByteBuffer rotationBuffer = ByteBuffer.allocate(height * width * 3 / 2);
-//            YuvHelper.I420Rotate(buffer.getDataY(), buffer.getStrideY(), buffer.getDataU(), buffer.getStrideU(),
-//                    buffer.getDataV(), buffer.getStrideV(), rotationBuffer, width, height, 270);
-
             // 分配YUV数组
             byte[] yData = new byte[ySize];
             byte[] uData = new byte[uSize];
@@ -106,11 +101,6 @@ public class RoomClient {
             buffer.getDataY().get(yData);
             buffer.getDataU().get(uData);
             buffer.getDataV().get(vData);
-
-//            rotationBuffer.rewind();
-//            rotationBuffer.get(yData);
-//            rotationBuffer.get(uData);
-//            rotationBuffer.get(vData);
 
             // 写文件流
             FileOutputStream fos = new FileOutputStream(file, true);
@@ -125,8 +115,42 @@ public class RoomClient {
 
     }
 
-    public void pushVideoFrame(VideoFrame videoFrame) {
+    public byte[][] convertI420BufferToByteArrayNew(VideoFrame videoFrame) {
+        // 获取I420Buffer
+        VideoFrame.I420Buffer buffer = videoFrame.getBuffer().toI420();
 
+        int height = buffer.getHeight();
+        int width = buffer.getWidth();
+
+        int ySize = height * width;
+        int uSize = ySize / 4;
+        int vSize = ySize / 4;
+
+        // 分配YUV数组
+        byte[] yData = new byte[ySize];
+        byte[] uData = new byte[uSize];
+        byte[] vData = new byte[vSize];
+
+        buffer.getDataY().get(yData);
+        buffer.getDataU().get(uData);
+        buffer.getDataV().get(vData);
+
+        byte[][] yuvData = {yData, uData, vData};
+        return yuvData;
+    }
+
+
+    public void pushVideoFrame(VideoFrame videoFrame) {
+        //saveYuvDataFile(videoFrame);
+        byte[][] yuvData = convertI420BufferToByteArrayNew(videoFrame);
+        byte[] yData = yuvData[0];
+        byte[] uData = yuvData[1];
+        byte[] vData = yuvData[2];
+
+//        mRtcClient.pushVideoTrack(videoFrame.getBuffer().getWidth(), videoFrame.getBuffer().getHeight(),
+//                                yData, videoFrame.getBuffer().toI420().getStrideY(),
+//                                uData, videoFrame.getBuffer().toI420().getStrideU(),
+//                                vData, videoFrame.getBuffer().toI420().getStrideV(), (videoFrame.getTimestampNs() / 1000));
     }
 
     private void enableCamera() {
@@ -142,8 +166,8 @@ public class RoomClient {
         @Override
         public void onRoomStateChanged(RoomState state, ConnectionClosedInfo closedInfo) {
             super.onRoomStateChanged(state, closedInfo);
-            Log.i("onRoomStateChanged", "onRoomStateChanged callback succeed MainActivity");
-            Log.i("onRoomStateChanged", "onRoomStateChanged state = " + state);
+//            Log.i(TAG, "onRoomStateChanged callback succeed");
+            Log.i(TAG, "onRoomStateChanged state = " + state);
             if (state == RoomState.CONNECTED) {
                 mRtcClient.initPublishVideo(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS, VIDEO_RATE);
             }
@@ -151,38 +175,38 @@ public class RoomClient {
 
         @Override
         public void onUserJoined(String remoteUserId, String displayName, String userData) {
-            Log.i("onUserJoined", "onUserJoined callback succeed MainActivity");
+            super.onUserJoined(remoteUserId, displayName, userData);
+            Log.i(TAG, "onUserJoined callback succeed");
         }
 
         @Override
         public void onUserLeft(String remoteUserId) {
-            Log.i("onUserLeft", "onUserLeft callback succeed MainActivity");
+            super.onUserLeft(remoteUserId);
+//            Log.i(TAG, "onUserLeft callback succeed");
         }
 
         @Override
         public void onLocalTrackCreate(Track track) {
             super.onLocalTrackCreate(track);
-            Log.i("onLocalTrackCreate", "onLocalTrackCreate callback succeed MainActivity");
-            Log.i("onLocalTrackCreate", "onLocalTrackCreate callback id=" + track.isVideo);
-            Log.i("onLocalTrackCreate", "onLocalTrackCreate ptr=" + track.nativeTrackPtr);
+//            Log.i(TAG, "onLocalTrackCreate callback succeed");
+            Log.i(TAG, "onLocalTrackCreate ptr = " + track.nativeTrackPtr);
             if (track.isVideo) {
                 mRtcClient.setOnVideoFrameListener(track.nativeTrackPtr);
                 enableCamera();
             }
-
         }
 
         @Override
         public void onLocalTrackRemove(Track track) {
             super.onLocalTrackRemove(track);
-            Log.i("onLocalTrackRemove", "onLocalTrackRemove callback succeed MainActivity");
+            Log.i(TAG, "onLocalTrackRemove callback succeed");
         }
 
         @Override
         public void onRemoteTrackCreate(Track track) {
             super.onRemoteTrackCreate(track);
-            Log.i("onRemoteTrackCreate", "onRemoteTrackCreate callback succeed MainActivity");
-            Log.i("onRemoteTrackCreate", "onRemoteTrackCreate ptr=" + track.nativeTrackPtr);
+//            Log.i(TAG, "onRemoteTrackCreate callback succeed");
+            Log.i(TAG, "onRemoteTrackCreate ptr = " + track.nativeTrackPtr);
             if (track.isVideo) {
                 Log.i("onRemoteTrackCreate", "onRemoteTrackCreate  isVideo inro ptr=");
                 mRtcClient.setOnVideoFrameListener(track.nativeTrackPtr);
@@ -193,13 +217,9 @@ public class RoomClient {
         @Override
         public void onRemoteTrackRemove(Track track) {
             super.onRemoteTrackRemove(track);
+//            Log.i(TAG, "onRemoteTrackRemove callback succeed");
         }
 
-        @Override
-        public void onVideoFrame(String user_id, String track_id, VideoFrame video_frame) {
-            super.onVideoFrame(user_id, track_id, video_frame);
-            Log.i("onVideoFrameCallback", "onVideoFrameCallback callback succeed MainActivity" + video_frame.toString());
-        }
 
         @Override
         public void onVideoFrame(String user_id, String track_id, com.zwrtc.jni.type.VideoFrame video_frame) {
@@ -208,11 +228,11 @@ public class RoomClient {
             Log.i("onVideoFrame", "onVideoFrame userId=" + user_id);
             if (Objects.equals(user_id, config.getUserId())) {
                 //当地的用户
-                Log.i("onVideoFrame", "onVideoFrame local user into");
-//              mRoomStore.remoteVideoTrack.postValue(video_frame);
+                Log.i(TAG, "onVideoFrame local user into");
+//                mRoomStore.remoteVideoTrack.postValue(video_frame);
             } else {
                 //远程的用户
-                Log.i("onVideoFrame", "onVideoFrame remote user into");
+                Log.i(TAG, "onVideoFrame remote user into");
                 mRoomStore.remoteVideoTrack.postValue(video_frame);
             }
         }

@@ -31,7 +31,6 @@ public class RTCFactory {
                 PeerConnectionFactory.InitializationOptions.builder(appContext)
                         .setFieldTrials(fieldTrials)
                         .setEnableInternalTracer(true)
-                        .setNativeLibraryName("libjingle_peerconnection_so")
                         .createInitializationOptions();
         PeerConnectionFactory.initialize(options);
     }

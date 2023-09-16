@@ -77,48 +77,43 @@ public class Utils {
 //        return data;
 //    }
 
-
-    public static byte[] convertI420BufferToByteArray(VideoFrame.I420Buffer i420Buffer) {
-        // 假设你已经有了一个 I420Buffer 对象 named i420Buffer
-    //try{
-        int width = i420Buffer.getWidth();
-        int height = i420Buffer.getHeight();
-
-        int strideY = i420Buffer.getStrideY();
-        int strideU = i420Buffer.getStrideU();
-        int strideV = i420Buffer.getStrideV();
-
-        ByteBuffer dataY = i420Buffer.getDataY();
-        ByteBuffer dataU = i420Buffer.getDataU();
-        ByteBuffer dataV = i420Buffer.getDataV();
-
-        // 计算 Y 数据的总长度（包括跨距）
-        int lengthY = strideY * height;
-        // 计算 U 数据的总长度（包括跨距）
-        int lengthU = strideU * ((width + 1) / 2);
-        // 计算 V 数据的总长度（包括跨距）
-        int lengthV = strideV * ((width + 1) / 2);
-
-
-        // 创建用于存储 YUV 数据的字节数组
-        byte[] yuvData = new byte[lengthY + lengthU + lengthV];
-
-        // 将 Y 数据复制到 yuvData 中
-        dataY.position(0);
-        dataY.get(yuvData, 0, lengthY);
-
-        // 将 U 数据复制到 yuvData 中
-        dataU.position(0);
-        dataU.get(yuvData, lengthY, lengthU);
-
-        // 将 V 数据复制到 yuvData 中
-        dataV.position(0);
-        dataV.get(yuvData, lengthY + lengthU, lengthV);
-
-        return yuvData;
-
-    }
-
+//    public static byte[] convertI420BufferToByteArray(VideoFrame.I420Buffer i420Buffer) {
+//        int width = i420Buffer.getWidth();
+//        int height = i420Buffer.getHeight();
+//
+//        int strideY = i420Buffer.getStrideY();
+//        int strideU = i420Buffer.getStrideU();
+//        int strideV = i420Buffer.getStrideV();
+//
+//        ByteBuffer dataY = i420Buffer.getDataY();
+//        ByteBuffer dataU = i420Buffer.getDataU();
+//        ByteBuffer dataV = i420Buffer.getDataV();
+//
+//        // 计算 Y 数据的总长度（包括跨距）
+//        int lengthY = strideY * height;
+//        // 计算 U 数据的总长度（包括跨距）
+//        int lengthU = strideU * ((width + 1) / 2);
+//        // 计算 V 数据的总长度（包括跨距）
+//        int lengthV = strideV * ((width + 1) / 2);
+//
+//
+//        // 创建用于存储 YUV 数据的字节数组
+//        byte[] yuvData = new byte[lengthY + lengthU + lengthV];
+//
+//        // 将 Y 数据复制到 yuvData 中
+//        dataY.position(0);
+//        dataY.get(yuvData, 0, lengthY);
+//
+//        // 将 U 数据复制到 yuvData 中
+//        dataU.position(0);
+//        dataU.get(yuvData, lengthY, lengthU);
+//
+//        // 将 V 数据复制到 yuvData 中
+//        dataV.position(0);
+//        dataV.get(yuvData, lengthY + lengthU, lengthV);
+//
+//        return yuvData;
+//    }
 
     public static VideoFrame convertNV21BufferToVideoFrame(com.zwrtc.jni.type.VideoFrame videoFrame) {
         NV21Buffer nv21Buffer = new NV21Buffer(mergeYUV420(videoFrame.yData, videoFrame.uData, videoFrame.vData, videoFrame.width, videoFrame.height), videoFrame.width, videoFrame.height, null);
@@ -139,9 +134,7 @@ public class Utils {
         int[] strides = {yStride, yStride};
         YuvImage image = new YuvImage(NV21, ImageFormat.NV21, width, height, strides);
 
-        image.compressToJpeg(
-                new Rect(0, 0, image.getWidth(), image.getHeight()),
-                100, baos);
+        image.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 100, baos);
 
         // rotate picture when saving to file
         Matrix matrix = new Matrix();

@@ -26,6 +26,8 @@ public abstract class RTCClient {
 
     public abstract void initPublishVideo(int w, int h, int fps, int bitrate);
 
+    public abstract void pushVideoTrack(int w, int h, byte[] dataY, int strideY, byte[] dataU, int strideU, byte[] dataV, int strideV, long timesTampUs);
+
     public abstract void setOnVideoFrameListener(long trackAdr);
 
 }

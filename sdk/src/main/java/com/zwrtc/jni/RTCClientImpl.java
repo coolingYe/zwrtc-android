@@ -20,6 +20,7 @@ public class RTCClientImpl extends RTCClient {
 
     public RTCClientImpl(@NonNull RTCClientConfig config) {
         this.rtcClientConfig = config;
+
         createNativeObject(rtcClientConfig);
         setProperties(rtcClientConfig);
     }
@@ -41,6 +42,11 @@ public class RTCClientImpl extends RTCClient {
     @Override
     public void initPublishVideo(int w, int h, int fps, int bitrate) {
         this.publishCustomVideo(w, h, fps, bitrate);
+    }
+
+    @Override
+    public void pushVideoTrack(int w, int h, byte[] dataY, int strideY, byte[] dataU, int strideU, byte[] dataV, int strideV, long timesTampUs) {
+        this.pushVideoFrame(w, h, dataY, strideY, dataU, strideU, dataV, strideV, timesTampUs);
     }
 
     @Override
